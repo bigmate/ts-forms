@@ -75,7 +75,7 @@ abstract class AbstractForm {
             configurable: true,
             enumerable: true,
             get(): any {
-                return f.repr ? f.repr() : this.fields[index].value;
+                return this.fields[index].value;
             },
             set(v: any): void {
                 this.fields[index].value = v;

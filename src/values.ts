@@ -102,7 +102,7 @@ export class FormFile implements File {
 }
 
 export class Option implements Choice {
-    constructor(public value: string, private label: string) {
+    constructor(public value: string | null, private label: string) {
     }
 
     public toString(): string {
@@ -114,15 +114,37 @@ export class Option implements Choice {
     }
 }
 
-export class MobileNumber {
-    private readonly _number:string;
-    constructor(value:string) {
+export const NullOption = new Option(null, 'Ничего не выбрано');
+
+export class MobileNumber implements Presenter {
+    private _number: string | null;
+
+    constructor(value: string | null) {
         this._number = value;
     }
-    get value():string {
-        return this._number
+
+    get value(): string | null {
+        return this._number;
     }
-    toJSON() {
+
+    set value(value: string | null) {
+        this._number = value;
+    }
+
+    normalized() {
+        if (this._number === null) return null;
         return this._number.replace(/(\(|\)|\s)/g, '');
     }
+
+    toJSON() {
+        return this.normalized();
+    }
+
+    toString(): string {
+        const value = this.normalized();
+        if (value === null) return 'null';
+        return value;
+    }
 }
+
+export const NullMobileNumber = new MobileNumber(null);

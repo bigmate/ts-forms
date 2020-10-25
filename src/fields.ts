@@ -1,6 +1,6 @@
 import {validator} from './validator';
 import {FileSize} from './stringer';
-import {Choice, FormFile, Presenter} from './values';
+import {Choice, FormFile} from './values';
 
 export interface Field<T> {
     name: string;
@@ -8,7 +8,6 @@ export interface Field<T> {
     errors: string[];
     isValid(): boolean;
     reset(): void;
-    repr?(): string;
     changed: boolean;
 }
 
@@ -36,13 +35,15 @@ abstract class AbstractField<T> implements Field<T> {
     get changed(): boolean {
         return this.value !== this.initValue;
     }
-
+    get isNull():boolean {
+        return this.value === null
+    }
     isValid(): boolean {
         this._errors = [];
-        if (this.value === null && this.required) {
+        if (this.isNull && this.required) {
             this._errors.push('Это обязательное поле');
             return false;
-        } else if (this.value === null && !this.required) {
+        } else if (this.isNull && !this.required) {
             return true;
         }
         for (const validator of this.validators) {
@@ -61,6 +62,9 @@ abstract class AbstractField<T> implements Field<T> {
 }
 
 export class BaseField extends AbstractField<any> {
+    public get isNull(): boolean {
+        return this.value === null ? true : this.value.value === null;
+    }
 }
 
 export class CharField extends AbstractField<string> {
@@ -115,12 +119,6 @@ export class FileField extends AbstractField<FormFile> {
 
 }
 
-export class ObjectField extends AbstractField<Presenter> {
-    repr(): string {
-        return this.value ? this.value.toString() : '';
-    }
-}
-
 export class ChoiceField extends AbstractField<Choice> {
     private readonly options: Choice[];
 
@@ -136,6 +134,10 @@ export class ChoiceField extends AbstractField<Choice> {
         this.validators.push(this.valueInOptions.bind(this));
     }
 
+    public get isNull(): boolean {
+        return this.value === null ? true : this.value.value === null;
+    }
+
     valueInOptions(value: Choice): void {
         if (this.options.length === 0) return;
         for (const option of this.options) {
@@ -148,10 +150,6 @@ export class ChoiceField extends AbstractField<Choice> {
 
     get optionsToString(): string {
         return this.options.map(o => o.toString()).join(', ');
-    }
-
-    repr(): string {
-        return this.value ? this.value.toString() : '';
     }
 
 }
